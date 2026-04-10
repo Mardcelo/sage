@@ -770,19 +770,16 @@ class HyperellipticJacobianHomset(SchemeHomset_points):
         if degree is None:
             degree = (-1, g)
 
-        while True:
-            # TODO: i think we can skip this and simply ensure u
-            #       is even degree with composition with the distinguished
-            #       point?
-            # if H.is_inert() and (u.degree() % 2) == 1:
-            #     #TODO: better method to sample even degree polynomials
-            #     continue
-            u = R.random_element(degree=degree, monic=True)
-            try:
-                return choice(self.lift_u(u, all=True))
-            # TODO: better handling rather than looping with try / except?
-            except IndexError:
-                pass
+        max_attempts = 1000 
+        for _ in range(max_attempts):
+            u = R.random_element(degree=degree, monic=True) 
+            candidates = self.lift_u(u, all=True) 
+            if candidates:
+                return choice(candidates)
+                
+        raise RuntimeError(
+            f"failed to find a random elemnt after {max_attempts}" 
+        ) 
 
     def _random_element_rational(self):
         r"""
@@ -905,16 +902,12 @@ class HyperellipticJacobianHomset(SchemeHomset_points):
         ss = []
         for u in R.polynomials(max_degree=g):
             if u.is_monic():
-                for P in self.lift_u(u, all=True):
-                    # UGLY HACK: it keeps overcounting 0 without this...
-                    # failing example: y^2 = x^5 + x over F_5
-                    if not u.is_one() and list(P)[:2] == [1, 0]:
-                        continue
-                    ss.append(P)
+                ss.extend(self.lift_u(u, all=True)) 
 
         if H.is_ramified() or H.is_split():
-            assert len(ss) == self.order()
-            return ss
+            ss = list(dict.fromkeys(ss)) 
+            assert len(ss) == self.order() 
+            return ss 
 
         # TODO: remove this
         # failing example: y^2 = 2x^6 + 1 over F_5
