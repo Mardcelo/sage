@@ -778,7 +778,7 @@ class HyperellipticJacobianHomset(SchemeHomset_points):
                 return choice(candidates)
                 
         raise RuntimeError(
-            f"failed to find a random elemnt after {max_attempts}" 
+            f"failed to find a random element after {max_attempts} attempts." 
         ) 
 
     def _random_element_rational(self):
